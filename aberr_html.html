@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>📖 البطاقات التفاعلية - التشبيه | الصف العاشر</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Simplified Arabic', 'Traditional Arabic', 'Tahoma', sans-serif;
+            background: linear-gradient(145deg, #1a472a 0%, #0d2818 100%);
+            min-height: 100vh;
+            padding: 25px;
+            position: relative;
+        }
+
+        /* زخرفة خلفية (أوراق متساقطة) */
+        .bg-leaf {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .leaf {
+            position: absolute;
+            color: rgba(255,215,0,0.1);
+            font-size: 30px;
+            animation: leafFloat 12s infinite linear;
+        }
+
+        @keyframes leafFloat {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* الحاوية الرئيسية */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* الهيدر */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 30px;
+            border-radius: 60px;
+            backdrop-filter: blur(5px);
+        }
+
+        .header p {
+            font-size: 16px;
+            margin-top: 12px;
+            opacity: 0.9;
+        }
+
+        /* لوحة الإحصائيات */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.95);
+            padding: 10px 25px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-right: 5px solid #ffd700;
+        }
+
+        .stat-icon {
+            font-size: 28px;
+        }
+
+        .stat-info {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a472a;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* أزرار التحكم */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #ffd700;
+            color: #1a472a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            background: #ffed4a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .btn-secondary {
+            background: #2c5f2d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1e3a1f;
+            transform: translateY(-3px);
+        }
+
+        .btn-warning {
+            background: #8b0000;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #a00000;
+            transform: translateY(-3px);
+        }
+
+        .btn-info {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #1a2a3a;
+            transform: translateY(-3px);
+        }
+
+        /* شبكة البطاقات */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 15px;
+        }
+
+        /* البطاقة التعليمية (Flip Card) */
+        .flip-card {
+            background: transparent;
+            height: 380px;
+            perspective: 1500px;
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 25px;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* الوجه الأمامي والخلفي */
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 25px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .flip-card-front {
+            background: linear-gradient(145deg, #ffffff, #fff8e7);
+            border: 2px solid #ffd700;
+        }
+
+        .flip-card-back {
+            background: linear-gradient(145deg, #1a472a, #0d2b1a);
+            color: white;
+            transform: rotateY(180deg);
+            border: 1px solid #ffd700;
+        }
+
+        /* محتوى الوجه الأمامي */
+        .card-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a472a;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .card-category {
+            font-size: 12px;
+            color: #ff8c00;
+            background: #fff3e0;
+            padding: 5px 15px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .flip-hint {
+            margin-top: auto;
+            font-size: 11px;
+            color: #aaa;
+            direction: ltr;
+        }
+
+        /* محتوى الوجه الخلفي */
+        .back-header {
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .back-title {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .back-content {
+            flex: 1;
+            text-align: right;
+            line-height: 1.7;
+            font-size: 15px;
+            overflow-y: auto;
+        }
+
+        .back-example {
+            background: rgba(255,255,255,0.15);
+            padding: 12px;
+            border-radius: 15px;
+            margin-top: 12px;
+            font-size: 13px;
+            border-right: 3px solid #ffd700;
+        }
+
+        .back-example-title {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        /* شريط التقدم */
+        .progress-container {
+            margin-top: 35px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 30px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            border-radius: 30px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* نافذة النتيجة النهائية */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.92);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInModal 0.4s ease;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, #fff, #fff8e7);
+            border-radius: 50px;
+            padding: 35px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: bounceResult 0.5s ease;
+        }
+
+        @keyframes bounceResult {
+            0% { transform: scale(0.4) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .result-emoji {
+            font-size: 70px;
+        }
+
+        .result-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #1a472a;
+        }
+
+        .result-stats {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff8c00;
+            margin: 15px 0;
+        }
+
+        .result-stars {
+            font-size: 35px;
+            letter-spacing: 8px;
+            margin: 15px 0;
+        }
+
+        .close-result {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1a472a, #0d2b1a);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        /* تذييل */
+        footer {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 10px;
+            }
+            .flip-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .controls, .stats-bar, .progress-container, footer, .btn-print {
+                display: none;
+            }
+            .flip-card .flip-card-inner {
+                transform: none !important;
+            }
+            .flip-card-back {
+                display: none;
+            }
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 26px;
+                padding: 8px 20px;
+            }
+            .btn {
+                padding: 8px 18px;
+                font-size: 13px;
+            }
+        }
+
+        .note {
+            background: rgba(0,0,0,0.5);
+            border-radius: 30px;
+            padding: 10px 20px;
+            text-align: center;
+            color: #ffd700;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-leaf" id="bgLeaf"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>
+                📖 التشبيه في اللغة العربية
+                <span>🎭</span>
+            </h1>
+            <p>البطاقات التفاعلية | التشبيه المؤكد المفصل 🤝 التشبيه المؤكد المجمل (البلاغي)</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-icon">📚</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="totalCards">8</div>
+                    <div class="stat-label">بطاقة تعليمية</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="reviewedCount">0</div>
+                    <div class="stat-label">تمت المراجعة</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="percentage">0</div>
+                    <div class="stat-label">نسبة الإنجاز</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="flipAllCards()">🔄 قلب جميع البطاقات</button>
+            <button class="btn btn-secondary" onclick="resetAllCards()">🔄 إعادة تعيين الكل</button>
+            <button class="btn btn-info" onclick="shuffleCards()">🎲 ترتيب عشوائي</button>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة البطاقات</button>
+            <button class="btn btn-warning" onclick="checkCompletion()">🏆 إنهاء المراجعة</button>
+        </div>
+
+        <div class="note">
+            💡 نصيحة: اضغط على أي بطاقة لقلبها ومشاهدة الشرح والمثال | راجع البطاقات حتى تصل إلى 100%
+        </div>
+
+        <div class="cards-grid" id="cardsGrid"></div>
+
+        <div class="progress-container">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">📊 تقدمك: 0%</div>
+
+        <footer>
+            <p>📖 درس التشبيه (المؤكد المفصل - المؤكد المجمل) | الصف العاشر الأساسي</p>
+            <p>✨ اضغط على البطاقة لقلبها ومعرفة الشرح والأمثلة</p>
+        </footer>
+    </div>
+
+    <script>
+        // بيانات البطاقات التعليمية (مستخرجة من درس التشبيه)
+        const cardsData = [
+            {
+                icon: "🎯",
+                title: "ما هو التشبيه؟",
+                category: "تعريف أساسي",
+                answer: "التشبيه هو ركن أساسي من أركان البلاغة العربية، وهو عقد مقارنة بين شيئين اشتركا في صفة أو أكثر باستخدام أداة.",
+                example: "زيد كالأسد في الشجاعة"
+            },
+            {
+                icon: "🏛️",
+                title: "أركان التشبيه",
+                category: "المكونات الأساسية",
+                answer: "للتشبيه أربعة أركان أساسية:<br><br>1️⃣ المشبه (الموصوف)<br>2️⃣ المشبه به (ما يشبه به)<br>3️⃣ أداة التشبيه (الكاف، كأن، مثل، يشبه)<br>4️⃣ وجه الشبه (الصفة المشتركة)",
+                example: "في 'زيد كالأسد في الشجاعة':<br>زيد = مشبه، الأسد = مشبه به، الكاف = أداة، الشجاعة = وجه شبه"
+            },
+            {
+                icon: "🔍",
+                title: "التشبيه المؤكد المفصل",
+                category: "النوع الأول",
+                answer: "هو التشبيه الذي حُذفت منه أداة التشبيه، ولكن ذُكر فيه وجه الشبه. سمي 'مؤكداً' لأن حذف الأداة يفيد المبالغة في التشبيه، و'مفصلاً' لأن وجه الشبه مذكور.",
+                example: "الجواد في السرعة برق خاطف<br><br>(حذفت 'الكاف'، ولكن ذكر وجه الشبه: السرعة)",
+                extra: "مثال آخر: 'أنت بحر في الكرم'"
+            },
+            {
+                icon: "✨",
+                title: "التشبيه المؤكد المجمل (البلاغي)",
+                category: "النوع الثاني",
+                answer: "هو التشبيه الذي حُذفت منه أداة التشبيه ووجه الشبه معاً. يسمى 'بلاغياً' لأنه أقوى أنواع التشبيه، حيث يوحي بأن المشبه هو المشبه به نفسه.",
+                example: "الإحسان شمس<br><br>(حذفت الأداة، وحذف وجه الشبه: الإشراق والإضاءة)<br><br>العلم نور<br>أنت بحر",
+                extra: "هذا النوع يفيد المبالغة والتأكيد"
+            },
+            {
+                icon: "⚖️",
+                title: "الفرق بين المؤكد المفصل والمؤكد المجمل",
+                category: "مقارنة",
+                answer: "🔹 المؤكد المفصل: حذفت الأداة + ذكر وجه الشبه<br><br>🔹 المؤكد المجمل (البلاغي): حذفت الأداة + حذف وجه الشبه",
+                example: "مثال مفصل: 'الأسد في الشجاعة أسد'<br><br>مثال مجمل: 'الأسد أسد'<br><br>المجمل أبلغ وأقوى من المفصل"
+            },
+            {
+                icon: "📝",
+                title: "التشبيه التام (ذكرت الأداة)",
+                category: "نوع آخر للمقارنة",
+                answer: "هو التشبيه الذي ذكرت فيه الأداة ووجه الشبه معاً. يسمى 'تام الأركان'، وهو أقل قوة من المؤكد المفصل والمجمل.",
+                example: "قصور كالكواكب لامعات<br><br>(الكاف = أداة، اللمعان = وجه شبه)<br><br>الطالب كالنحلة في النشاط",
+                extra: "ملاحظة: كلما حُذفت الأداة ووجه الشبه، ازدادت قوة التشبيه"
+            },
+            {
+                icon: "💡",
+                title: "أمثلة تطبيقية",
+                category: "تدريبات",
+                answer: "استخرج نوع التشبيه في كل مثال:<br><br>🔸 'العلم كالنور' → تشبيه تام (ذكرت الأداة)<br><br>🔸 'العلم نور' → تشبيه مؤكد مجمل بلاغي<br><br>🔸 'العلم في الإيضاح نور' → تشبيه مؤكد مفصل",
+                example: "تدرب بنفسك: 'المعلم كالشمس في العطاء' → تام<br>'المعلم شمس في العطاء' → مؤكد مفصل<br>'المعلم شمس' → مؤكد مجمل بلاغي"
+            },
+            {
+                icon: "🏆",
+                title: "خلاصة الدرس",
+                category: "ملخص نهائي",
+                answer: "📌 التشبيه المؤكد المفصل = حذفت الأداة + ذكر وجه الشبه<br><br>📌 التشبيه المؤكد المجمل (البلاغي) = حذفت الأداة + حذف وجه الشبه<br><br>📌 كلما زاد الحذف، زادت القوة البلاغية<br><br>📌 التشبيه البلاغي من أجمل الأساليب للتعبير عن المعاني",
+                example: "🌙 أنت قمر<br>🌸 أنت وردة<br>🦁 هو أسد"
+            }
+        ];
+
+        // متغيرات البطاقات
+        let cards = [];
+        let flippedStates = [];
+
+        // إنشاء أوراق الخلفية المتساقطة
+        function createLeaves() {
+            const bg = document.getElementById('bgLeaf');
+            const leavesChars = ['🍂', '🍃', '🌿', '🍁', '🌾'];
+            for (let i = 0; i < 60; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                leaf.innerHTML = leavesChars[Math.floor(Math.random() * leavesChars.length)];
+                leaf.style.left = Math.random() * 100 + '%';
+                leaf.style.fontSize = (Math.random() * 25 + 15) + 'px';
+                leaf.style.animationDelay = Math.random() * 12 + 's';
+                leaf.style.animationDuration = Math.random() * 15 + 8 + 's';
+                bg.appendChild(leaf);
+            }
+        }
+
+        // خلط البطاقات
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // ترتيب عشوائي
+        function shuffleCards() {
+            cards = shuffleArray([...cardsData]);
+            flippedStates = new Array(cards.length).fill(false);
+            renderCards();
+            updateProgress();
+            playSound('shuffle');
+        }
+
+        // قلب جميع البطاقات
+        function flipAllCards() {
+            const allFlipped = flippedStates.every(state => state === true);
+            flippedStates = flippedStates.map(() => !allFlipped);
+            renderCards();
+            updateProgress();
+        }
+
+        // إعادة تعيين
+        function resetAllCards() {
+            flippedStates = new Array(cards.length).fill(false);
+            renderCards();
+            updateProgress();
+        }
+
+        // قلب بطاقة معينة
+        function toggleFlip(index) {
+            flippedStates[index] = !flippedStates[index];
+            renderCards();
+            updateProgress();
+            playSound('flip');
+        }
+
+        // تشغيل صوت بسيط
+        function playSound(type) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'flip') {
+                    osc.frequency.value = 660;
+                    gain.gain.value = 0.1;
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.15);
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'shuffle') {
+                    osc.frequency.value = 880;
+                    gain.gain.value = 0.08;
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
+                    osc.stop(audioCtx.currentTime + 0.1);
+                }
+                setTimeout(() => audioCtx.close(), 200);
+            } catch(e) {}
+        }
+
+        // تحديث مؤشر التقدم
+        function updateProgress() {
+            const reviewed = flippedStates.filter(state => state === true).length;
+            const percentage = Math.round((reviewed / cards.length) * 100);
+            document.getElementById('reviewedCount').innerText = reviewed;
+            document.getElementById('percentage').innerText = percentage;
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').innerHTML = `📊 تقدمك: ${percentage}% (${reviewed}/${cards.length})`;
+            
+            // تغيير لون شريط التقدم حسب النسبة
+            const progressFill = document.getElementById('progressFill');
+            if (percentage >= 80) {
+                progressFill.style.background = 'linear-gradient(90deg, #4caf50, #ffd700)';
+            } else if (percentage >= 50) {
+                progressFill.style.background = 'linear-gradient(90deg, #ffd700, #ff8c00)';
+            } else {
+                progressFill.style.background = 'linear-gradient(90deg, #ff8c00, #ff5722)';
+            }
+        }
+
+        // التحقق من إكمال المراجعة
+        function checkCompletion() {
+            const reviewed = flippedStates.filter(state => state === true).length;
+            const percentage = (reviewed / cards.length) * 100;
+            
+            let message = '', emoji = '', stars = '';
+            if (percentage >= 100) {
+                message = 'ممتاز! 🎉';
+                emoji = '🏆🌟🏆';
+                stars = '⭐⭐⭐⭐⭐';
+            } else if (percentage >= 75) {
+                message = 'جيد جداً! 👍';
+                emoji = '📚🎯📚';
+                stars = '⭐⭐⭐⭐';
+            } else if (percentage >= 50) {
+                message = 'تواصل المراجعة 💪';
+                emoji = '📖✨📖';
+                stars = '⭐⭐⭐';
+            } else {
+                message = 'حاول مراجعة المزيد';
+                emoji = '🎓📚🎓';
+                stars = '⭐⭐';
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'result-modal';
+            modal.innerHTML = `
+                <div class="result-card">
+                    <div class="result-emoji">${emoji}</div>
+                    <div class="result-title">${message}</div>
+                    <div class="result-stats">${reviewed} / ${cards.length} بطاقة</div>
+                    <div class="result-stars">${stars}</div>
+                    <p>✅ نسبة الإنجاز: ${Math.round(percentage)}%</p>
+                    <button class="close-result" onclick="this.parentElement.parentElement.remove()">📖 مواصلة المراجعة</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            playSound('flip');
+        }
+
+        // عرض البطاقات
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
+            
+            cards.forEach((card, index) => {
+                const isFlipped = flippedStates[index];
+                const flipCard = document.createElement('div');
+                flipCard.className = `flip-card ${isFlipped ? 'flipped' : ''}`;
+                flipCard.onclick = () => toggleFlip(index);
+                
+                flipCard.innerHTML = `
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon">${card.icon}</div>
+                            <div class="card-title">${card.title}</div>
+                            <div class="card-category">📁 ${card.category}</div>
+                            <div class="flip-hint">👆 اضغط للاطلاع على الشرح</div>
+                        </div>
+                        <div class="flip-card-back">
+                            <div class="back-header">
+                                <div class="back-title">
+                                    <span>📖</span> ${card.title}
+                                </div>
+                            </div>
+                            <div class="back-content">
+                                ${card.answer}
+                                <div class="back-example">
+                                    <div class="back-example-title">📌 مثال:</div>
+                                    ${card.example}
+                                    ${card.extra ? `<div style="margin-top: 8px;"><span style="color:#ffd700;">➕</span> ${card.extra}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(flipCard);
+            });
+        }
+
+        // تهيئة البطاقات
+        function init() {
+            createLeaves();
+            cards = [...cardsData];
+            flippedStates = new Array(cards.length).fill(false);
+            renderCards();
+            updateProgress();
+        }
+
+        init();
+    </script>
+</body>
+</html>
