@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎯 المسابقة التفاعلية - الممنوع من الصرف</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Simplified Arabic', 'Traditional Arabic', 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* تأثيرات خلفية متحركة */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-animation span {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* حاوية المسابقة */
+        .quiz-container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* الهيدر */
+        .quiz-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+
+        .quiz-header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* لوحة المعلومات */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .score-box, .level-box, .question-counter {
+            text-align: center;
+        }
+
+        .score-box span:first-child, .level-box span:first-child, .question-counter span:first-child {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .score-value, .level-value, .counter-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        /* منطقة السؤال */
+        .question-area {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .question-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        /* خيارات الإجابة */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option-btn {
+            padding: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            background: white;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            border-color: #1e3c72;
+            background: #f0f8ff;
+        }
+
+        .option-btn.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .option-btn.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+            animation: wrongShake 0.5s ease;
+        }
+
+        .option-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px #4caf50; }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* زر التالي */
+        .next-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,152,0,0.4);
+        }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* نافذة النتيجة النهائية */
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: bounceIn 0.6s ease;
+        }
+
+        .result-card h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin: 20px 0;
+        }
+
+        .stars {
+            font-size: 40px;
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* مؤقت */
+        .timer-bar {
+            height: 5px;
+            background: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
+            transition: width 1s linear;
+        }
+
+        .timer-text {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .question-text {
+                font-size: 18px;
+            }
+        }
+
+        /* مؤثرات خاصة */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ff9800;
+            position: absolute;
+            animation: confettiFall 3s ease forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+
+    <div class="quiz-container" id="quizContainer">
+        <div class="quiz-header">
+            <h1>
+                🎯 المسابقة التفاعلية
+                <span style="font-size: 30px;">🏆</span>
+            </h1>
+            <p>درس: الممنوع من الصرف | الصف العاشر</p>
+        </div>
+
+        <div class="info-panel">
+            <div class="score-box">
+                <span>⭐ النقاط</span>
+                <div class="score-value" id="scoreValue">0</div>
+            </div>
+            <div class="level-box">
+                <span>📊 المستوى</span>
+                <div class="level-value" id="levelValue">1</div>
+            </div>
+            <div class="question-counter">
+                <span>📋 السؤال</span>
+                <div class="counter-value" id="counterValue">1</div>
+            </div>
+        </div>
+
+        <div class="question-area">
+            <div class="question-text" id="questionText">
+                جاري تحميل السؤال...
+            </div>
+            <div class="options-grid" id="optionsGrid">
+                <button class="option-btn">...</button>
+                <button class="option-btn">...</button>
+                <button class="option-btn">...</button>
+                <button class="option-btn">...</button>
+            </div>
+            <div class="timer-bar">
+                <div class="timer-fill" id="timerFill" style="width: 100%"></div>
+            </div>
+            <div class="timer-text" id="timerText">⏱️ 15 ثانية متبقية</div>
+            <button class="next-btn" id="nextBtn" disabled>➡️ السؤال التالي</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== الأسئلة ==========
+        const questions = [
+            {
+                text: "ما هو تعريف 'الممنوع من الصرف'؟",
+                options: [
+                    "اسم مبني لا يتغير آخره",
+                    "اسم معرب لا يقبل التنوين ويجر بالفتحة",
+                    "اسم معرب يقبل التنوين في جميع أحواله",
+                    "اسم مبني يجر بالكسرة"
+                ],
+                correct: 1
+            },
+            {
+                text: "ما علامة جر الاسم الممنوع من الصرف إذا لم يكن معرفاً بـ 'أل' أو مضافاً؟",
+                options: ["الكسرة", "الضمة", "الفتحة", "السكون"],
+                correct: 2
+            },
+            {
+                text: "أي من الأسماء التالية يُمنع من الصرف؟",
+                options: ["كتاب", "مسجد", "أحمد", "قلم"],
+                correct: 2
+            },
+            {
+                text: "لماذا مُنع اسم 'عُمَر' من الصرف؟",
+                options: ["لأنه مؤنث", "لأنه على وزن فُعَل", "لأنه أعجمي", "لأنه على وزن الفعل"],
+                correct: 1
+            },
+            {
+                text: "متى يُصرف الاسم الممنوع من الصرف (أي يجر بالكسرة)؟",
+                options: [
+                    "إذا كان مفرداً",
+                    "إذا كان نكرة",
+                    "إذا كان معرفاً بـ 'أل' أو مضافاً",
+                    "إذا كان في آخر الجملة"
+                ],
+                correct: 2
+            },
+            {
+                text: "أي الكلمات التالية تمثل 'صيغة منتهى الجموع'؟",
+                options: ["معلمون", "مساجد", "طلاب", "ممرات"],
+                correct: 1
+            },
+            {
+                text: "في جملة 'سلمت على فاطمةَ'، علامة جر 'فاطمة' هي الفتحة لأنها:",
+                options: [
+                    "اسم أعجمي",
+                    "صفة على وزن أفعل",
+                    "علم مؤنث تأنيثاً معنوياً",
+                    "صيغة منتهى الجموع"
+                ],
+                correct: 2
+            },
+            {
+                text: "أي الصفات التالية ممنوعة من الصرف؟",
+                options: ["جميل", "طويل", "أحمر", "مهذب"],
+                correct: 2
+            },
+            {
+                text: "في جملة 'هذه مفاتيحُ الغرفةِ'، كلمة 'مفاتيح' هنا:",
+                options: [
+                    "ممنوعة من الصرف لأنها صيغة منتهى جموع",
+                    "مصروفة لأنها معرفة بـ 'أل'",
+                    "مصروفة لأنها مضافة",
+                    "ممنوعة من الصرف لأنها جمع مؤنث سالم"
+                ],
+                correct: 2
+            },
+            {
+                text: "أي الأسماء التالية يُمنع من الصرف لكونه أعجمياً؟",
+                options: ["محمد", "إبراهيم", "خالد", "سعيد"],
+                correct: 1
+            }
+        ];
+
+        // متغيرات المسابقة
+        let currentQuestion = 0;
+        let score = 0;
+        let level = 1;
+        let answered = false;
+        let timerInterval;
+        let timeLeft = 15;
+        let canAnswer = true;
+
+        // عناصر DOM
+        const questionText = document.getElementById('questionText');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const nextBtn = document.getElementById('nextBtn');
+        const scoreValue = document.getElementById('scoreValue');
+        const levelValue = document.getElementById('levelValue');
+        const counterValue = document.getElementById('counterValue');
+        const timerFill = document.getElementById('timerFill');
+        const timerText = document.getElementById('timerText');
+        const quizContainer = document.getElementById('quizContainer');
+
+        // إنشاء مؤثرات خلفية
+        function createBackgroundBubbles() {
+            const bg = document.getElementById('bgAnimation');
+            for (let i = 0; i < 50; i++) {
+                const span = document.createElement('span');
+                span.style.left = Math.random() * 100 + '%';
+                span.style.width = Math.random() * 30 + 5 + 'px';
+                span.style.height = span.style.width;
+                span.style.animationDelay = Math.random() * 15 + 's';
+                span.style.animationDuration = Math.random() * 20 + 10 + 's';
+                bg.appendChild(span);
+            }
+        }
+
+        // تشغيل صوت (باستخدام Web Audio API)
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'correct') {
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.value = 0.3;
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } else if (type === 'wrong') {
+                    oscillator.frequency.value = 440;
+                    gainNode.gain.value = 0.3;
+                    oscillator.type = 'sawtooth';
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } else if (type === 'win') {
+                    // لحن فوز بسيط
+                    const frequencies = [523.25, 587.33, 659.25, 783.99];
+                    frequencies.forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.value = freq;
+                            gain.gain.value = 0.2;
+                            osc.start();
+                            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                            osc.stop(audioContext.currentTime + 0.3);
+                        }, i * 100);
+                    });
+                }
+                
+                setTimeout(() => audioContext.close(), 1000);
+            } catch(e) {
+                console.log("Audio not supported");
+            }
+        }
+
+        // إنشاء كونفيتي
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.position = 'fixed';
+                confetti.style.zIndex = '200';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // بدء المؤقت
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = 15;
+            timerFill.style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                if (!canAnswer) return;
+                
+                timeLeft--;
+                const percentage = (timeLeft / 15) * 100;
+                timerFill.style.width = percentage + '%';
+                timerText.innerText = `⏱️ ${timeLeft} ثانية متبقية`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (canAnswer && !answered) {
+                        handleTimeout();
+                    }
+                }
+            }, 1000);
+        }
+
+        // معالجة انتهاء الوقت
+        function handleTimeout() {
+            canAnswer = false;
+            answered = true;
+            playSound('wrong');
+            
+            // تعطيل جميع الأزرار
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // إظهار الإجابة الصحيحة
+            const correctBtn = btns[questions[currentQuestion].correct];
+            correctBtn.classList.add('correct');
+            
+            nextBtn.disabled = false;
+        }
+
+        // عرض السؤال
+        function displayQuestion() {
+            answered = false;
+            canAnswer = true;
+            const q = questions[currentQuestion];
+            questionText.innerText = q.text;
+            
+            // إعادة تعيين الأزرار
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, idx) => {
+                btn.innerText = q.options[idx];
+                btn.classList.remove('correct', 'wrong', 'disabled');
+                btn.disabled = false;
+                btn.style.background = 'white';
+                btn.style.color = '#2c3e50';
+            });
+            
+            nextBtn.disabled = true;
+            startTimer();
+        }
+
+        // معالجة الإجابة
+        function handleAnswer(selectedIndex) {
+            if (!canAnswer || answered) return;
+            
+            canAnswer = false;
+            answered = true;
+            clearInterval(timerInterval);
+            
+            const isCorrect = (selectedIndex === questions[currentQuestion].correct);
+            const btns = document.querySelectorAll('.option-btn');
+            const correctBtn = btns[questions[currentQuestion].correct];
+            
+            if (isCorrect) {
+                // إجابة صحيحة
+                playSound('correct');
+                btns[selectedIndex].classList.add('correct');
+                const points = 10 * level;
+                score += points;
+                scoreValue.innerText = score;
+                
+                // تحديث المستوى
+                const newLevel = Math.floor(score / 50) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    levelValue.innerText = level;
+                    createConfetti();
+                    playSound('win');
+                    showLevelUpEffect();
+                } else {
+                    createConfetti();
+                }
+            } else {
+                // إجابة خاطئة
+                playSound('wrong');
+                btns[selectedIndex].classList.add('wrong');
+                correctBtn.classList.add('correct');
+            }
+            
+            // تعطيل جميع الأزرار
+            btns.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            nextBtn.disabled = false;
+        }
+
+        // تأثير رفع المستوى
+        function showLevelUpEffect() {
+            const levelElement = document.getElementById('levelValue');
+            levelElement.style.transform = 'scale(1.3)';
+            levelElement.style.color = '#ff9800';
+            setTimeout(() => {
+                levelElement.style.transform = 'scale(1)';
+                levelElement.style.color = '#1e3c72';
+            }, 500);
+            
+            // رسالة منبثقة
+            const msg = document.createElement('div');
+            msg.innerText = '🎉 رائع! انتقلت للمستوى ' + level + ' 🎉';
+            msg.style.position = 'fixed';
+            msg.style.top = '20%';
+            msg.style.left = '50%';
+            msg.style.transform = 'translateX(-50%)';
+            msg.style.background = 'linear-gradient(135deg, #ff9800, #f57c00)';
+            msg.style.color = 'white';
+            msg.style.padding = '15px 30px';
+            msg.style.borderRadius = '50px';
+            msg.style.fontSize = '20px';
+            msg.style.fontWeight = 'bold';
+            msg.style.zIndex = '200';
+            msg.style.animation = 'bounceIn 0.5s ease';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+
+        // الانتقال للسؤال التالي
+        function nextQuestion() {
+            currentQuestion++;
+            counterValue.innerText = currentQuestion + 1;
+            
+            if (currentQuestion >= questions.length) {
+                endGame();
+            } else {
+                displayQuestion();
+            }
+        }
+
+        // نهاية اللعبة
+        function endGame() {
+            const totalPossible = questions.length * 10;
+            const totalWithLevels = score;
+            const percentage = (score / (questions.length * 10)) * 100;
+            
+            let message = '';
+            let stars = '';
+            
+            if (percentage >= 90) {
+                message = '🏆 بطل! 🏆';
+                stars = '⭐⭐⭐⭐⭐';
+                playSound('win');
+            } else if (percentage >= 70) {
+                message = '🎉 ممتاز! 🎉';
+                stars = '⭐⭐⭐⭐';
+            } else if (percentage >= 50) {
+                message = '👍 جيد جداً! 👍';
+                stars = '⭐⭐⭐';
+            } else if (percentage >= 30) {
+                message = '📚 حاول مرة أخرى 📚';
+                stars = '⭐⭐';
+            } else {
+                message = '💪 واصل المذاكرة 💪';
+                stars = '⭐';
+            }
+            
+            createConfetti();
+            
+            const resultHTML = `
+                <div class="result-overlay" id="resultOverlay">
+                    <div class="result-card">
+                        <h2>${message}</h2>
+                        <div class="stars">${stars}</div>
+                        <div class="final-score">
+                            ${score} / ${questions.length * 10}
+                        </div>
+                        <p>النسبة المئوية: ${Math.round(percentage)}%</p>
+                        <p>المستوى الذي وصلت إليه: ${level}</p>
+                        <button class="restart-btn" onclick="restartGame()">🔄 العب مرة أخرى</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', resultHTML);
+        }
+
+        // إعادة تشغيل اللعبة
+        window.restartGame = function() {
+            const overlay = document.getElementById('resultOverlay');
+            if (overlay) overlay.remove();
+            
+            currentQuestion = 0;
+            score = 0;
+            level = 1;
+            
+            scoreValue.innerText = score;
+            levelValue.innerText = level;
+            counterValue.innerText = 1;
+            
+            displayQuestion();
+        }
+
+        // إنشاء أزرار الخيارات وإضافة المستمعين
+        function initOptions() {
+            optionsGrid.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.addEventListener('click', () => handleAnswer(i));
+                optionsGrid.appendChild(btn);
+            }
+        }
+        
+        // مستمع زر التالي
+        nextBtn.addEventListener('click', nextQuestion);
+        
+        // تهيئة المسابقة
+        function init() {
+            createBackgroundBubbles();
+            initOptions();
+            displayQuestion();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
